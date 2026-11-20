@@ -42,4 +42,18 @@ const verifyAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyAuth };
+// Use after verifyAuth. Role names come from the `role` table.
+const requireRole =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.roleName)) {
+      return res.status(403).json({
+        success: false,
+        error: "FORBIDDEN",
+        message: "You do not have permission to perform this action",
+      });
+    }
+    return next();
+  };
+
+module.exports = { verifyAuth, requireRole };

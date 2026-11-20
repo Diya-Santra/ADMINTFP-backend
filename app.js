@@ -9,6 +9,7 @@ const client = require("prom-client");
 const { db, getPool } = require("./config/db");
 
 const authRoutes = require("./routes/auth");
+const caseStatusRoutes = require("./routes/caseStatus");
 
 const app = express();
 
@@ -142,6 +143,7 @@ app.get("/metrics", async (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/case-statuses", caseStatusRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
