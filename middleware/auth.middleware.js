@@ -1,9 +1,13 @@
 const {
   decodeTokenService,
   getActiveUserService,
+  mustChangePasswordService,
 } = require("../services/auth.services");
 
-const verifyAuth = async (req, res, next) => {
+// `allowPendingPasswordChange`: let through a user whose password was reset
+// and not yet changed. Only change-password and verify use this; every other
+// route answers 403 PASSWORD_CHANGE_REQUIRED until they change it.
+const authenticate = (allowPendingPasswordChange) => async (req, res, next) => {
   const match = /^Bearer\s+(\S+)\s*$/.exec(req.headers.authorization || "");
 
   if (!match) {
@@ -35,12 +39,25 @@ const verifyAuth = async (req, res, next) => {
       });
     }
 
-    req.user = user;
+    const mustChangePassword = await mustChangePasswordService(user.userId);
+    req.user = { ...user, mustChangePassword };
+
+    if (mustChangePassword && !allowPendingPasswordChange) {
+      return res.status(403).json({
+        success: false,
+        error: "PASSWORD_CHANGE_REQUIRED",
+        message: "You must change your temporary password before continuing",
+      });
+    }
+
     return next();
   } catch (error) {
     return next(error);
   }
 };
+
+const verifyAuth = authenticate(false);
+const verifyAuthAllowPasswordChange = authenticate(true);
 
 // Use after verifyAuth. Role names come from the `role` table.
 const requireRole =
@@ -56,4 +73,4 @@ const requireRole =
     return next();
   };
 
-module.exports = { verifyAuth, requireRole };
+module.exports = { verifyAuth, verifyAuthAllowPasswordChange, requireRole };

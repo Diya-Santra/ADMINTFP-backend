@@ -10,6 +10,7 @@ const { db, getPool } = require("./config/db");
 
 const authRoutes = require("./routes/auth");
 const caseStatusRoutes = require("./routes/caseStatus");
+const userRoutes = require("./routes/users");
 
 const app = express();
 
@@ -144,6 +145,7 @@ app.get("/metrics", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/case-statuses", caseStatusRoutes);
+app.use("/api/admin/users", userRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
